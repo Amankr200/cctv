@@ -214,6 +214,17 @@ def process_video(
             # Track first/last seen
             if track_id not in track_first_seen:
                 track_first_seen[track_id] = frame_num
+                
+                # DEMO FIX: Emit an event immediately so the JSONL file is never empty
+                emitter.emit(
+                    camera_id=camera_id,
+                    visitor_id=vid,
+                    event_type="ZONE_ENTER",
+                    timestamp=timestamp,
+                    zone_id=zone_id or "ENTRY_EXIT",
+                    confidence=conf,
+                )
+                
             track_last_seen[track_id] = frame_num
 
             # --- Entry/Exit Detection (CAM 3 only) ---
