@@ -54,6 +54,7 @@ logger = logging.getLogger("store_intelligence")
 
 import asyncio
 from .metrics import get_store_metrics
+from .seed import generate_seed_events
 
 # --- App Lifespan ---
 @asynccontextmanager
@@ -61,6 +62,20 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Store Intelligence API...")
     await init_db()
     logger.info("Database initialized. API ready.")
+    
+    # Auto-seed if database is empty (fresh deployment)
+    try:
+        cursor = await db._db_pool.execute("SELECT COUNT(*) FROM events")
+        event_count = (await cursor.fetchone())[0]
+        if event_count == 0:
+            logger.info("Empty database detected — seeding with sample data...")
+            seed_events = generate_seed_events()
+            for ev in seed_events:
+                await db.insert_event(ev)
+            await db._db_pool.commit()
+            logger.info(f"Seeded {len(seed_events)} sample events.")
+    except Exception as e:
+        logger.error(f"Seed error: {e}")
     
     # Start background broadcaster
     task = asyncio.create_task(metrics_broadcaster())
