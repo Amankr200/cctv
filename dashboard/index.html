@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Intelligence Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🟣</span>
+                <h1>Store Intelligence <span class="badge">LIVE</span></h1>
+            </div>
+            <div class="store-selector">
+                <select id="storeSelect">
+                    <option value="STORE_BLR_002">Brigade Road, BLR</option>
+                </select>
+                <div class="status-indicator">
+                    <div class="pulse" id="connectionPulse"></div>
+                    <span id="connectionStatus">Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid-layout">
+            <!-- Key Metrics Cards -->
+            <section class="metrics-row">
+                <div class="metric-card">
+                    <h3>Unique Visitors</h3>
+                    <div class="metric-value" id="valVisitors">--</div>
+                    <div class="metric-trend positive">Live Today</div>
+                </div>
+                <div class="metric-card highlight">
+                    <h3>Conversion Rate</h3>
+                    <div class="metric-value" id="valConversion">--%</div>
+                    <div class="metric-trend">Transactions vs Visitors</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Queue Depth</h3>
+                    <div class="metric-value" id="valQueue">--</div>
+                    <div class="metric-trend" id="trendQueue">Billing counter</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Abandonment Rate</h3>
+                    <div class="metric-value" id="valAbandon">--%</div>
+                    <div class="metric-trend negative">Queue drop-offs</div>
+                </div>
+            </section>
+
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <!-- Left Column -->
+                <div class="col-left">
+                    <!-- Funnel Chart -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Conversion Funnel</h2>
+                            <button class="icon-btn" onclick="fetchFunnel()">↻</button>
+                        </div>
+                        <div class="funnel-container" id="funnelContainer">
+                            <div class="loading">Loading funnel data...</div>
+                        </div>
+                    </div>
+
+                    <!-- Heatmap / Zone Stats -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2>Zone Intelligence</h2>
+                            <button class="icon-btn" onclick="fetchHeatmap()">↻</button>
+                        </div>
+                        <div class="zone-list" id="zoneList">
+                            <div class="loading">Loading zone data...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-right">
+                    <!-- Anomalies / Alerts -->
+                    <div class="panel alert-panel">
+                        <div class="panel-header">
+                            <h2>Active Alerts</h2>
+                            <span class="alert-badge" id="alertCount">0</span>
+                        </div>
+                        <div class="anomaly-list" id="anomalyList">
+                            <div class="no-alerts">
+                                <div class="icon">✨</div>
+                                <p>All clear. No anomalies detected.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Health -->
+                    <div class="panel health-panel">
+                        <div class="panel-header">
+                            <h2>System Health</h2>
+                            <button class="icon-btn" onclick="fetchHealth()">↻</button>
+                        </div>
+                        <div class="health-stats" id="healthStats">
+                            <div class="loading">Checking systems...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+env/
+.env
+.venv
+env.bak/
+venv.bak/
+
+# Video Files (Huge files that will break GitHub uploads)
+*.mp4
+*.avi
+*.mkv
+*.mov
+
+# Machine Learning Weights & Models
+*.pt
+*.pth
+yolov8n.pt
+yolov8n-seg.pt
+
+# Databases and Event Logs (Locally generated)
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+data/*.sqlite
+events.jsonl
+data/events.jsonl
+
+# Logs
+*.log
+logs/
+
+# IDE and OS Specific
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Project specific ignores
+ Brigade_Bangalore_10_April_26*.csv
+ check_videos.py
+ extract_layout.py

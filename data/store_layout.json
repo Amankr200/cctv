@@ -1,0 +1,110 @@
+{
+  "store_id": "STORE_BLR_002",
+  "store_name": "Brigade Road Bangalore",
+  "internal_id": "ST1008",
+  "city": "Bangalore",
+  "address": "Brigade Road, Bangalore",
+  "open_hours": {
+    "open": "10:00",
+    "close": "22:00",
+    "timezone": "Asia/Kolkata"
+  },
+  "cameras": {
+    "CAM_SKINCARE_01": {
+      "file": "CAM 1.mp4",
+      "description": "Skincare zone - top wall facing down",
+      "coverage_zones": ["SKINCARE", "FOH"],
+      "fps": 29.97,
+      "resolution": "1920x1080"
+    },
+    "CAM_MAKEUP_02": {
+      "file": "CAM 2.mp4",
+      "description": "Makeup zone - bottom wall and center area",
+      "coverage_zones": ["MAKEUP", "FRAGRANCE", "NAIL_UNIT"],
+      "fps": 29.97,
+      "resolution": "1920x1080"
+    },
+    "CAM_ENTRY_03": {
+      "file": "CAM 3.mp4",
+      "description": "Entry/Exit glass door - threshold camera",
+      "coverage_zones": ["ENTRY_EXIT"],
+      "fps": 29.97,
+      "resolution": "1920x1080",
+      "entry_line": {
+        "y_threshold": 0.6,
+        "direction": "vertical",
+        "inbound": "left_to_right",
+        "outbound": "right_to_left"
+      }
+    },
+    "CAM_BACKROOM_04": {
+      "file": "CAM 4.mp4",
+      "description": "Back storage/staff area - not customer-facing",
+      "coverage_zones": ["BACKROOM"],
+      "fps": 25,
+      "resolution": "1920x1080",
+      "staff_only": true
+    },
+    "CAM_BILLING_05": {
+      "file": "CAM 5.mp4",
+      "description": "Cash counter / billing area + accessories",
+      "coverage_zones": ["BILLING", "ACCESSORIES"],
+      "fps": 25,
+      "resolution": "1920x1080"
+    }
+  },
+  "zones": {
+    "ENTRY_EXIT": {
+      "name": "Entry / Exit",
+      "type": "threshold",
+      "description": "Glass door entrance area"
+    },
+    "SKINCARE": {
+      "name": "Skincare Zone",
+      "type": "product_zone",
+      "brands": ["FarmStay", "The Face Shop", "Good Vibes", "DermDoc", "Minimalist", "Aqualogica", "Lakme Skin", "COSRX", "Round Lab", "Klairs"],
+      "sub_zones": ["EB_KOREAN", "FACE_SHOP", "GOOD_VIBES", "DERMDOC", "MINIMALIST", "AQUALOGICA", "LAKME_SKIN"]
+    },
+    "MAKEUP": {
+      "name": "Makeup Zone",
+      "type": "product_zone",
+      "brands": ["Maybelline", "Faces Canada", "Lakme", "Colorbar", "Sugar", "Swiss Beauty", "NY Bae", "Renee"],
+      "sub_zones": ["MAYBELLINE", "FACES_CANADA", "LAKME_MAKEUP", "COLORBAR_SUGAR", "SWISS_BEAUTY", "RENEE_NYBAE"]
+    },
+    "FOH": {
+      "name": "Front of House",
+      "type": "display",
+      "description": "Central display area with promotional stands"
+    },
+    "FRAGRANCE": {
+      "name": "Fragrance Zone",
+      "type": "product_zone"
+    },
+    "NAIL_UNIT": {
+      "name": "Nail Unit",
+      "type": "service_zone"
+    },
+    "BILLING": {
+      "name": "Billing / Cash Counter",
+      "type": "checkout",
+      "description": "Cash counter with POS system"
+    },
+    "ACCESSORIES": {
+      "name": "Accessories",
+      "type": "product_zone"
+    },
+    "BACKROOM": {
+      "name": "Back Room / Storage",
+      "type": "staff_only",
+      "description": "Staff storage area - not customer-facing"
+    },
+    "ALPS_GOODNESS": {
+      "name": "Alps Goodness / Streax",
+      "type": "product_zone"
+    },
+    "PMU": {
+      "name": "Permanent Makeup Unit",
+      "type": "service_zone"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# Detection Pipeline Dependencies (heavier — torch, ultralytics, opencv)
+-r requirements.txt
+ultralytics==8.2.0
+opencv-python==4.10.0.84
+numpy>=1.26.0
+lapx
