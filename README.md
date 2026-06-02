@@ -68,10 +68,10 @@ The system is divided into two **decoupled subsystems** connected by a REST API 
 │  │              SUBSYSTEM 2 — INTELLIGENCE API                         │     │
 │  │                    (Dockerised Backend)                             │     │
 │  │                                                                     │     │
-│  │  ┌──────────────┐   ┌─────────────┐    ┌─────────────────────────┐  │     │
+│  │  ┌──────────────┐    ┌─────────────┐   ┌─────────────────────────┐  │     │
 │  │  │  FastAPI      │   │  aiosqlite  │   │  POS Data Integration   │  │     │
 │  │  │  + Pydantic   │──▶│  (Async    │◀──│  (CSV → DB on startup)  │  │     │
-│  │  │  Validation   │   │   SQLite)  │   └─────────────────────────┘   │     │
+│  │  │  Validation   │   │   SQLite)  │    └─────────────────────────┘  │     │
 │  │  └──────┬────────┘   └─────┬──────┘                                 │     │
 │  │         │                  │                                        │     │
 │  │         ▼                  ▼                                        │     │
