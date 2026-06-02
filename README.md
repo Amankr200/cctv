@@ -1,4 +1,4 @@
-# 🏪 Store Intelligence System
+# Store Intelligence System
 
 > A containerised, real-time analytics pipeline that transforms raw CCTV footage into actionable retail intelligence — built for the **Purplle Tech Challenge 2026**.
 
