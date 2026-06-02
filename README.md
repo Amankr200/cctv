@@ -136,7 +136,7 @@ The system is divided into two **decoupled subsystems** connected by a REST API 
 |---|---|
 | **SORT / DeepSORT** | SORT uses only IoU for association and drops heavily occluded targets. DeepSORT adds a Re-ID CNN per detection, which doubles inference time. |
 | **StrongSORT** | Uses OSNet appearance features — adds a second deep learning model per frame, too slow for local deployment. |
-| **ByteTrack** ✅ | Uses low-confidence detections for recovery (perfect for crowded retail shelves), requires zero additional neural networks, and is natively integrated into Ultralytics. |
+| **ByteTrack** [DONE] | Uses low-confidence detections for recovery (perfect for crowded retail shelves), requires zero additional neural networks, and is natively integrated into Ultralytics. |
 
 **Custom tuning** (`custom_tracker.yaml`):
 ```yaml
@@ -199,7 +199,7 @@ Zone Polygon Example (CAM_SKINCARE_01):
 |---|---|
 | **Train a reflection classifier** | Requires labeled dataset of reflections vs. real people. Expensive to collect, fragile across stores. |
 | **Depth estimation** | Monocular depth networks (MiDaS) add inference latency and are unreliable on flat mirror surfaces. |
-| **Floor Filter** ✅ | Zero-cost geometric check. Reuses existing zone polygons. 100% precision for rejecting behind-wall reflections. |
+| **Floor Filter** [DONE] | Zero-cost geometric check. Reuses existing zone polygons. 100% precision for rejecting behind-wall reflections. |
 
 ---
 
@@ -226,7 +226,7 @@ Re-entry event:
 |---|---|
 | **OSNet Re-ID** | State-of-the-art CNN for person re-identification. Adds 50ms+ per crop per frame. Running two deep learning models simultaneously would bottleneck the pipeline on consumer GPUs. |
 | **Feature embeddings (CLIP)** | Powerful but massively over-parameterised for same-session Re-ID (same clothing, same lighting). |
-| **HSV Histogram** ✅ | Clothing color is stable within a single shopping session. HSV is invariant to slight illumination changes. Runs in <1ms per comparison. Sufficient accuracy for same-session, same-store Re-ID. |
+| **HSV Histogram** [DONE] | Clothing color is stable within a single shopping session. HSV is invariant to slight illumination changes. Runs in <1ms per comparison. Sufficient accuracy for same-session, same-store Re-ID. |
 
 ---
 
@@ -293,7 +293,7 @@ CAM 3 Frame:
 | Alternative | Why Rejected |
 |---|---|
 | **3D homography projection** | Requires calibrated camera intrinsics/extrinsics and a global coordinate system. Extremely complex for 5 heterogeneous cameras. |
-| **Temporal window** ✅ | In a single-floor, ~1000 sq ft retail store, a person takes <15 seconds to walk between any two camera zones. The 15-second window is empirically tight enough to avoid false merges while catching real transitions. |
+| **Temporal window** [DONE] | In a single-floor, ~1000 sq ft retail store, a person takes <15 seconds to walk between any two camera zones. The 15-second window is empirically tight enough to avoid false merges while catching real transitions. |
 
 ---
 
