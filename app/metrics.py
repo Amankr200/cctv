@@ -7,7 +7,7 @@ import json
 from datetime import datetime, timedelta
 from fastapi import APIRouter
 
-from .models import StoreMetrics
+from .models import StoreMetrics, QueueStats
 from . import database as db
 
 logger = logging.getLogger("store_intelligence.metrics")
@@ -72,8 +72,12 @@ async def get_store_metrics(store_id: str):
         unique_visitors=unique_visitors,
         conversion_rate=round(conversion_rate, 4),
         avg_dwell_by_zone=avg_dwell_by_zone,
-        current_queue_depth=queue_stats["current_queue_depth"],
-        abandonment_rate=round(queue_stats["abandonment_rate"], 4),
+        queue_stats=QueueStats(
+            current_queue_depth=queue_stats["current_queue_depth"],
+            abandonment_rate=round(queue_stats["abandonment_rate"], 4),
+            join_count=queue_stats["join_count"],
+            abandon_count=queue_stats["abandon_count"],
+        ),
         total_transactions=total_transactions,
         total_revenue=round(total_revenue, 2),
     )

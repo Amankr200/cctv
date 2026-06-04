@@ -68,14 +68,20 @@ class IngestResponse(BaseModel):
     errors: list[dict] = []
 
 
+class QueueStats(BaseModel):
+    current_queue_depth: int
+    abandonment_rate: float
+    join_count: int = 0
+    abandon_count: int = 0
+
+
 class StoreMetrics(BaseModel):
     store_id: str
     timestamp: str
     unique_visitors: int
     conversion_rate: float
     avg_dwell_by_zone: dict[str, float]  # zone_id -> avg dwell ms
-    current_queue_depth: int
-    abandonment_rate: float
+    queue_stats: QueueStats
     total_transactions: int
     total_revenue: float
 
@@ -137,5 +143,6 @@ class StoreHealth(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+    version: str = "1.0.0"
     uptime_seconds: float
     stores: list[StoreHealth]

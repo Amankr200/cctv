@@ -180,7 +180,7 @@ function renderHeatmap(zones) {
                     <div class="zone-name">${zone.zone_name}</div>
                     <div class="zone-stats">
                         <span>Visitors: ${zone.visitor_count}</span>
-                        <span>Avg Dwell: ${(zone.avg_dwell_time_ms / 1000).toFixed(0)}s</span>
+                        <span>Avg Dwell: ${(zone.avg_dwell_ms / 1000).toFixed(0)}s</span>
                     </div>
                 </div>
                 <div class="zone-score-wrap" style="background: ${color}22; border: 2px solid ${color}; color: ${color}">
@@ -213,7 +213,7 @@ function renderAnomalies(anomalies) {
     if (!anomalies || anomalies.length === 0) {
         container.innerHTML = `
             <div class="no-alerts">
-                <div class="icon">✨</div>
+                <div class="icon">--</div>
                 <p>All clear. No anomalies detected.</p>
             </div>
         `;
@@ -230,7 +230,7 @@ function renderAnomalies(anomalies) {
                     <span class="anomaly-time">${time}</span>
                 </div>
                 <div class="anomaly-desc">${a.description}</div>
-                <div class="anomaly-action">💡 ${a.suggested_action}</div>
+                <div class="anomaly-action">Action: ${a.suggested_action}</div>
             </div>
         `;
     });

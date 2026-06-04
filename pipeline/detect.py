@@ -6,6 +6,7 @@ Usage:
     python detect.py --video_dir ../data/videos --output ../data/events.jsonl
     python detect.py --video ../path/to/clip.mp4 --camera_id CAM_ENTRY_03 --output events.jsonl
 """
+
 import argparse
 import json
 import os

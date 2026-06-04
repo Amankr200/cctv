@@ -1,6 +1,6 @@
 # Store Intelligence System
 
-> A containerised, real-time analytics pipeline that transforms raw CCTV footage into actionable retail intelligence — built for the **Purplle Tech Challenge 2026**.
+> A containerised, real-time analytics pipeline that transforms raw CCTV footage into actionable retail intelligence -- built for the **Purplle Tech Challenge 2026**.
 
 ---
 
@@ -8,17 +8,17 @@
 
 - [System Architecture](#system-architecture)
 - [Algorithmic Design](#algorithmic-design)
-  - [1. Object Detection — YOLOv8 Nano](#1-object-detection--yolov8-nano)
-  - [2. Multi-Object Tracking — ByteTrack](#2-multi-object-tracking--bytetrack)
-  - [3. Zone Classification — Ray-Casting Point-in-Polygon](#3-zone-classification--ray-casting-point-in-polygon)
-  - [4. Mirror / Reflection Filtering — Floor Filter](#4-mirror--reflection-filtering--floor-filter)
-  - [5. Re-Identification — HSV Color Histogram Matching](#5-re-identification--hsv-color-histogram-matching)
-  - [6. Staff Detection — Multi-Signal Heuristic Classifier](#6-staff-detection--multi-signal-heuristic-classifier)
-  - [7. Entry / Exit Detection — Virtual Tripwire](#7-entry--exit-detection--virtual-tripwire)
-  - [8. Cross-Camera Deduplication — Temporal Window Merge](#8-cross-camera-deduplication--temporal-window-merge)
-  - [9. Conversion Funnel — Session-Based Stage Correlation](#9-conversion-funnel--session-based-stage-correlation)
-  - [10. Heatmap Scoring — Weighted Normalisation](#10-heatmap-scoring--weighted-normalisation)
-  - [11. Anomaly Detection — Rule-Based Sliding Window](#11-anomaly-detection--rule-based-sliding-window)
+  - [1. Object Detection -- YOLOv8 Nano](#1-object-detection--yolov8-nano)
+  - [2. Multi-Object Tracking -- ByteTrack](#2-multi-object-tracking--bytetrack)
+  - [3. Zone Classification -- Ray-Casting Point-in-Polygon](#3-zone-classification--ray-casting-point-in-polygon)
+  - [4. Mirror / Reflection Filtering -- Floor Filter](#4-mirror--reflection-filtering--floor-filter)
+  - [5. Re-Identification -- HSV Color Histogram Matching](#5-re-identification--hsv-color-histogram-matching)
+  - [6. Staff Detection -- Multi-Signal Heuristic Classifier](#6-staff-detection--multi-signal-heuristic-classifier)
+  - [7. Entry / Exit Detection -- Virtual Tripwire](#7-entry--exit-detection--virtual-tripwire)
+  - [8. Cross-Camera Deduplication -- Temporal Window Merge](#8-cross-camera-deduplication--temporal-window-merge)
+  - [9. Conversion Funnel -- Session-Based Stage Correlation](#9-conversion-funnel--session-based-stage-correlation)
+  - [10. Heatmap Scoring -- Weighted Normalisation](#10-heatmap-scoring--weighted-normalisation)
+  - [11. Anomaly Detection -- Rule-Based Sliding Window](#11-anomaly-detection--rule-based-sliding-window)
 - [Data Flow](#data-flow)
 - [Event Schema Design](#event-schema-design)
 - [API Endpoints](#api-endpoints)
@@ -34,75 +34,75 @@
 The system is divided into two **decoupled subsystems** connected by a REST API boundary:
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                        STORE INTELLIGENCE SYSTEM                             │
-├──────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌─────────────────────────────────────────────────────────────────────┐     │
-│  │              SUBSYSTEM 1 — VIDEO ANALYTICS PIPELINE                 │     │
-│  │                         (Edge / Local)                              │     │
-│  │                                                                     │     │
-│  │  ┌──────────┐   ┌───────────┐   ┌──────────────┐    ┌────────────┐  │     │
-│  │  │  CCTV    │──▶│  YOLOv8   │──▶│  ByteTrack   │──▶│   Zone    │  │     │
-│  │  │  Feeds   │   │  Nano     │   │  Tracker      │   │ Classifier │  │     │
-│  │  │ (5 Cams) │   │ (Person   │   │ (Persistent   │   │ (Ray-Cast  │  │     │
-│  │  └──────────┘   │  Detect)  │   │  Track IDs)   │   │  PiP)      │  │     │
-│  │                 └───────────┘   └───────────────┘   └──────┬─────┘  │     │
-│  │                                                            │        │     │
-│  │                 ┌───────────┐   ┌───────────────┐          │        │     │
-│  │                 │  Staff    │◀──│  Floor Filter │◀────────┘        │     │
-│  │                 │ Detector  │   │ (Reflection    │                  │     │
-│  │                 │(Heuristic)│   │  Rejection)    │                  │     │
-│  │                 └─────┬─────┘   └───────────────┘                   │     │
-│  │                       │                                             │     │
-│  │                       ▼                                             │     │
-│  │              ┌─────────────────┐    ┌────────────────┐              │     │
-│  │              │  Event Emitter  │──▶ │ events.jsonl   │             │     │
-│  │              │  (Structured    │    │  (JSONL File)  │              │     │
-│  │              │   JSONL Output) │    └────────────────┘              │     │
-│  │              └────────┬────────┘                                    │     │
-│  └───────────────────────┼────────────────────────────────────────────┘      │
-│                          │  POST /events/ingest (Batch, Idempotent)          │
-│                          ▼                                                   │
-│  ┌─────────────────────────────────────────────────────────────────────┐     │
-│  │              SUBSYSTEM 2 — INTELLIGENCE API                         │     │
-│  │                    (Dockerised Backend)                             │     │
-│  │                                                                     │     │
-│  │  ┌──────────────┐    ┌─────────────┐   ┌─────────────────────────┐  │     │
-│  │  │  FastAPI      │   │  aiosqlite  │   │  POS Data Integration   │  │     │
-│  │  │  + Pydantic   │──▶│  (Async    │◀──│  (CSV → DB on startup)  │  │     │
-│  │  │  Validation   │   │   SQLite)  │    └─────────────────────────┘  │     │
-│  │  └──────┬────────┘   └─────┬──────┘                                 │     │
-│  │         │                  │                                        │     │
-│  │         ▼                  ▼                                        │     │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────────────┐   │     │
-│  │  │ Metrics  │  │  Funnel  │  │ Heatmap  │  │ Anomaly Detection │    │     │
-│  │  │ Engine   │  │ Analysis │  │ Scoring  │  │ (Rule-based)      │    │     │
-│  │  └────┬─────┘  └──────────┘  └──────────┘  └────────────────────┘   │     │
-│  │       │                                                             │     │
-│  │       ▼   WebSocket /ws/live (2s broadcast interval)                │     │
-│  │  ┌────────────────────────────────────────────────┐                 │     │
-│  │  │        LIVE DASHBOARD (Vanilla JS)             │                 │     │
-│  │  │  Glassmorphism UI  •  Chart.js  •  WebSocket   │                 │     │
-│  │  └────────────────────────────────────────────────┘                 │     │
-│  └─────────────────────────────────────────────────────────────────────┘     │
-└──────────────────────────────────────────────────────────────────────────────┘
++------------------------------------------------------------------------------+
+|                        STORE INTELLIGENCE SYSTEM                             |
++------------------------------------------------------------------------------+
+|                                                                              |
+|  +-----------------------------------------------------------------------+  |
+|  |              SUBSYSTEM 1 -- VIDEO ANALYTICS PIPELINE                  |  |
+|  |                         (Edge / Local)                                |  |
+|  |                                                                       |  |
+|  |  +----------+   +-----------+   +--------------+   +-------------+   |  |
+|  |  |  CCTV    |-->|  YOLOv8   |-->|  ByteTrack   |-->|    Zone     |   |  |
+|  |  |  Feeds   |   |  Nano     |   |  Tracker     |   |  Classifier |   |  |
+|  |  |  (5 Cams)|   | (Person   |   | (Persistent  |   |  (Ray-Cast  |   |  |
+|  |  +----------+   |  Detect)  |   |  Track IDs)  |   |   PiP)      |   |  |
+|  |                  +-----------+   +--------------+   +------+------+   |  |
+|  |                                                            |          |  |
+|  |                  +-----------+   +---------------+         |          |  |
+|  |                  |  Staff    |<--|  Floor Filter  |<--------+          |  |
+|  |                  | Detector  |   | (Reflection    |                   |  |
+|  |                  |(Heuristic)|   |  Rejection)    |                   |  |
+|  |                  +-----+-----+   +---------------+                   |  |
+|  |                        |                                              |  |
+|  |                        v                                              |  |
+|  |               +-----------------+   +----------------+               |  |
+|  |               |  Event Emitter  |-->|  events.jsonl  |               |  |
+|  |               |  (Structured    |   |  (JSONL File)  |               |  |
+|  |               |   JSONL Output) |   +----------------+               |  |
+|  |               +--------+--------+                                    |  |
+|  +-------------------------+--------------------------------------------+  |
+|                            |  POST /events/ingest (Batch, Idempotent)      |
+|                            v                                               |
+|  +-----------------------------------------------------------------------+ |
+|  |              SUBSYSTEM 2 -- INTELLIGENCE API                          | |
+|  |                    (Dockerised Backend)                                | |
+|  |                                                                       | |
+|  |  +--------------+   +------------+   +-------------------------+     | |
+|  |  |  FastAPI      |   |  aiosqlite |   |  POS Data Integration  |     | |
+|  |  |  + Pydantic   |-->|  (Async    |<--|  (CSV -> DB on startup) |     | |
+|  |  |  Validation   |   |   SQLite)  |   +-------------------------+     | |
+|  |  +------+--------+   +-----+------+                                  | |
+|  |         |                   |                                         | |
+|  |         v                   v                                         | |
+|  |  +----------+  +----------+  +----------+  +--------------------+    | |
+|  |  | Metrics  |  |  Funnel  |  | Heatmap  |  | Anomaly Detection  |    | |
+|  |  | Engine   |  | Analysis |  | Scoring  |  | (Rule-based)       |    | |
+|  |  +----+-----+  +----------+  +----------+  +--------------------+    | |
+|  |       |                                                               | |
+|  |       v   WebSocket /ws/live (2s broadcast interval)                  | |
+|  |  +------------------------------------------------+                  | |
+|  |  |        LIVE DASHBOARD (Vanilla JS)              |                  | |
+|  |  |  Glassmorphism UI  |  Chart.js  |  WebSocket    |                  | |
+|  |  +------------------------------------------------+                  | |
+|  +-----------------------------------------------------------------------+ |
++------------------------------------------------------------------------------+
 ```
 
 ### Why this architecture?
 
 | Decision | Choice | Reasoning |
 |---|---|---|
-| **Decoupled pipeline ↔ API** | REST boundary (`POST /events/ingest`) | The CV pipeline is compute-heavy and runs on the host GPU. The API is lightweight and runs in Docker. Decoupling lets them scale and fail independently. |
-| **Edge-first processing** | Semantic events emitted at the pipeline, not raw coordinates | Pushing spatial reasoning to the edge reduces API payload by 100×. Only meaningful state changes (ENTRY, ZONE_ENTER, etc.) cross the network. |
-| **SQLite over Postgres** | `aiosqlite` with WAL mode | A single `docker compose up` must work on a reviewer's laptop. No Zookeeper, no Kafka, no Postgres containers — just a single file DB. |
+| **Decoupled pipeline <-> API** | REST boundary (`POST /events/ingest`) | The CV pipeline is compute-heavy and runs on the host GPU. The API is lightweight and runs in Docker. Decoupling lets them scale and fail independently. |
+| **Edge-first processing** | Semantic events emitted at the pipeline, not raw coordinates | Pushing spatial reasoning to the edge reduces API payload by 100x. Only meaningful state changes (ENTRY, ZONE_ENTER, etc.) cross the network. |
+| **SQLite over Postgres** | `aiosqlite` with WAL mode | A single `docker compose up` must work on a reviewer's laptop. No Zookeeper, no Kafka, no Postgres containers -- just a single file DB. |
 | **WebSocket broadcasting** | 2-second polling with dirty-check | The dashboard needs real-time feel without overwhelming the client. The broadcaster only recomputes metrics when the event count changes. |
 
 ---
 
 ## Algorithmic Design
 
-### 1. Object Detection — YOLOv8 Nano
+### 1. Object Detection -- YOLOv8 Nano
 
 **Algorithm:** Single-stage anchor-free object detector (Ultralytics YOLOv8n).
 
@@ -114,29 +114,29 @@ The system is divided into two **decoupled subsystems** connected by a REST API 
 **Why YOLOv8 Nano:**
 | Alternative | Why Rejected |
 |---|---|
-| **RT-DETR** | Higher accuracy on occluded figures, but ~3× slower inference. Requires heavy GPU acceleration that a hackathon reviewer's laptop may not have. |
+| **RT-DETR** | Higher accuracy on occluded figures, but ~3x slower inference. Requires heavy GPU acceleration that a hackathon reviewer's laptop may not have. |
 | **MediaPipe** | Designed for single-person pose estimation, not multi-person retail tracking. |
-| **YOLOv8-Large** | Better accuracy but 10× heavier. Nano achieves sufficient person-detection accuracy at 30+ FPS on consumer hardware. |
+| **YOLOv8-Large** | Better accuracy but 10x heavier. Nano achieves sufficient person-detection accuracy at 30+ FPS on consumer hardware. |
 
 **Config:** Processes every 3rd frame (`skip_frames=3`) to maintain real-time throughput without sacrificing tracking continuity.
 
 ---
 
-### 2. Multi-Object Tracking — ByteTrack
+### 2. Multi-Object Tracking -- ByteTrack
 
-**Algorithm:** ByteTrack (Zhang et al., ECCV 2022) — a multi-object tracker that associates **every** detection box, including low-confidence ones.
+**Algorithm:** ByteTrack (Zhang et al., ECCV 2022) -- a multi-object tracker that associates **every** detection box, including low-confidence ones.
 
 **How it works:**
 1. **First association:** High-confidence detections (`> 0.5`) are matched to existing tracks using IoU (Intersection over Union) with the Hungarian algorithm.
-2. **Second association:** Remaining unmatched tracks are re-matched against *low-confidence* detections (`> 0.1`). This is ByteTrack's key innovation — it rescues occluded persons that other trackers would discard.
+2. **Second association:** Remaining unmatched tracks are re-matched against *low-confidence* detections (`> 0.1`). This is ByteTrack's key innovation -- it rescues occluded persons that other trackers would discard.
 3. **Track lifecycle:** New tracks are created when detections exceed `new_track_thresh=0.6`. Lost tracks are kept in a buffer for 150 frames (~5 seconds at 30fps) before deletion, allowing re-association after brief occlusions.
 
 **Why ByteTrack:**
 | Alternative | Why Rejected |
 |---|---|
 | **SORT / DeepSORT** | SORT uses only IoU for association and drops heavily occluded targets. DeepSORT adds a Re-ID CNN per detection, which doubles inference time. |
-| **StrongSORT** | Uses OSNet appearance features — adds a second deep learning model per frame, too slow for local deployment. |
-| **ByteTrack** [DONE] | Uses low-confidence detections for recovery (perfect for crowded retail shelves), requires zero additional neural networks, and is natively integrated into Ultralytics. |
+| **StrongSORT** | Uses OSNet appearance features -- adds a second deep learning model per frame, too slow for local deployment. |
+| **ByteTrack** | Uses low-confidence detections for recovery (perfect for crowded retail shelves), requires zero additional neural networks, and is natively integrated into Ultralytics. |
 
 **Custom tuning** (`custom_tracker.yaml`):
 ```yaml
@@ -147,7 +147,7 @@ new_track_thresh: 0.6  # Only create tracks from confident detections
 
 ---
 
-### 3. Zone Classification — Ray-Casting Point-in-Polygon
+### 3. Zone Classification -- Ray-Casting Point-in-Polygon
 
 **Algorithm:** Ray-casting algorithm for point-in-polygon (PiP) membership testing.
 
@@ -157,41 +157,41 @@ new_track_thresh: 0.6  # Only create tracks from confident detections
 3. The normalised point is tested against pre-defined polygonal boundaries for each camera's visible zones using the ray-casting algorithm:
    - Cast a horizontal ray from the point to infinity.
    - Count the number of polygon edges the ray crosses.
-   - **Odd crossings** → point is inside. **Even crossings** → point is outside.
+   - **Odd crossings** -> point is inside. **Even crossings** -> point is outside.
 4. Sub-zone resolution: If the point falls within a parent zone (e.g., SKINCARE), it is further tested against sub-zone polygons (e.g., FACE_SHOP, MINIMALIST, AQUALOGICA).
 
 ```
 Zone Polygon Example (CAM_SKINCARE_01):
 
-   (0,0)────────────────────(0.85,0)
-     │    SKINCARE ZONE       │
-     │  ┌──────┬──────┬─────┐ │
-     │  │EB_KR │FACE_ │GOOD │ │
-     │  │      │SHOP  │VIBES│ │
-     │  └──────┴──────┴─────┘ │
-   (0,0.7)───────────────(0.85,0.7)
-                 │
-        (0.45,0.7)──────────(1.0,0.7)
-                 │    FOH     │
-        (0.45,1.0)──────────(1.0,1.0)
+   (0,0)------------------------(0.85,0)
+     |    SKINCARE ZONE            |
+     |  +------+------+------+    |
+     |  |EB_KR |FACE_ |GOOD |    |
+     |  |      |SHOP  |VIBES|    |
+     |  +------+------+------+    |
+   (0,0.7)--------------------(0.85,0.7)
+                 |
+        (0.45,0.7)-----------(1.0,0.7)
+                 |    FOH      |
+        (0.45,1.0)-----------(1.0,1.0)
 ```
 
 **Why ray-casting PiP:**
-- **O(n) per point** where n = number of polygon edges. With 4–6 edges per zone and ~10 zones per camera, this is negligible compared to YOLO inference.
-- Zero external dependencies — pure arithmetic.
+- **O(n) per point** where n = number of polygon edges. With 4-6 edges per zone and ~10 zones per camera, this is negligible compared to YOLO inference.
+- Zero external dependencies -- pure arithmetic.
 - Pixel-precise for hand-drawn polygons extracted from the floor plan.
-- Avoids the overhead of spatial indexing (R-trees) or ML-based zone classification, which are overkill for ≤10 static polygons.
+- Avoids the overhead of spatial indexing (R-trees) or ML-based zone classification, which are overkill for <=10 static polygons.
 
 ---
 
-### 4. Mirror / Reflection Filtering — Floor Filter
+### 4. Mirror / Reflection Filtering -- Floor Filter
 
-**Algorithm:** Geometric rejection — if a detected person's feet map to coordinates **outside all valid floor polygons**, the detection is discarded.
+**Algorithm:** Geometric rejection -- if a detected person's feet map to coordinates **outside all valid floor polygons**, the detection is discarded.
 
 **How it works:**
 1. Retail stores have wall mirrors behind product shelves.
 2. YOLO detects mirror reflections as real people (identical confidence scores).
-3. However, reflections appear "behind" the wall in 2D image space — their foot-anchor coordinates fall outside the physical floor plan.
+3. However, reflections appear "behind" the wall in 2D image space -- their foot-anchor coordinates fall outside the physical floor plan.
 4. The Floor Filter reuses the zone classifier: if `classify_zone()` returns `(None, None)`, the detection is rejected.
 
 **Why this approach:**
@@ -199,26 +199,26 @@ Zone Polygon Example (CAM_SKINCARE_01):
 |---|---|
 | **Train a reflection classifier** | Requires labeled dataset of reflections vs. real people. Expensive to collect, fragile across stores. |
 | **Depth estimation** | Monocular depth networks (MiDaS) add inference latency and are unreliable on flat mirror surfaces. |
-| **Floor Filter** [DONE] | Zero-cost geometric check. Reuses existing zone polygons. 100% precision for rejecting behind-wall reflections. |
+| **Floor Filter** | Zero-cost geometric check. Reuses existing zone polygons. 100% precision for rejecting behind-wall reflections. |
 
 ---
 
-### 5. Re-Identification — HSV Color Histogram Matching
+### 5. Re-Identification -- HSV Color Histogram Matching
 
 **Algorithm:** HSV color histogram correlation for visual appearance matching.
 
 **How it works:**
-1. When a person **exits** the store (crosses the virtual tripwire outbound on CAM 3), their image crop is converted to HSV color space and a 2D histogram (30 hue bins × 32 saturation bins) is computed and stored.
+1. When a person **exits** the store (crosses the virtual tripwire outbound on CAM 3), their image crop is converted to HSV color space and a 2D histogram (30 hue bins x 32 saturation bins) is computed and stored.
 2. When a **new track** appears at the entry camera, its histogram is compared against all stored exit signatures using `cv2.compareHist` with **Pearson correlation** (`HISTCMP_CORREL`).
-3. If the correlation score exceeds `0.85`, the new track is assigned the **same visitor ID** as the matched exit — preserving identity across track drops.
+3. If the correlation score exceeds `0.85`, the new track is assigned the **same visitor ID** as the matched exit -- preserving identity across track drops.
 
 ```
 Exit event:
-  Person crop → BGR→HSV → calcHist([H,S], [30,32]) → normalize → store
+  Person crop -> BGR->HSV -> calcHist([H,S], [30,32]) -> normalize -> store
 
 Re-entry event:
-  New crop → BGR→HSV → calcHist([H,S], [30,32]) → normalize
-  → compareHist(new_hist, stored_hist, CORREL) > 0.85 → MATCH
+  New crop -> BGR->HSV -> calcHist([H,S], [30,32]) -> normalize
+  -> compareHist(new_hist, stored_hist, CORREL) > 0.85 -> MATCH
 ```
 
 **Why HSV histogram over deep Re-ID:**
@@ -226,11 +226,11 @@ Re-entry event:
 |---|---|
 | **OSNet Re-ID** | State-of-the-art CNN for person re-identification. Adds 50ms+ per crop per frame. Running two deep learning models simultaneously would bottleneck the pipeline on consumer GPUs. |
 | **Feature embeddings (CLIP)** | Powerful but massively over-parameterised for same-session Re-ID (same clothing, same lighting). |
-| **HSV Histogram** [DONE] | Clothing color is stable within a single shopping session. HSV is invariant to slight illumination changes. Runs in <1ms per comparison. Sufficient accuracy for same-session, same-store Re-ID. |
+| **HSV Histogram** | Clothing color is stable within a single shopping session. HSV is invariant to slight illumination changes. Runs in <1ms per comparison. Sufficient accuracy for same-session, same-store Re-ID. |
 
 ---
 
-### 6. Staff Detection — Multi-Signal Heuristic Classifier
+### 6. Staff Detection -- Multi-Signal Heuristic Classifier
 
 **Algorithm:** Weighted scoring across multiple behavioural and appearance signals.
 
@@ -244,7 +244,7 @@ Each tracked person accumulates a staff score across three independent signals:
 | **Behind-counter position** | +0.3 | >70% of detections in top portion of CAM 5 | Billing staff stand behind the counter, which maps to the upper region of the billing camera's field of view. |
 | **Backroom (CAM 4)** | 0.95 | Any detection | Anyone in the backroom is definitionally staff. |
 
-**Classification rule:** `is_staff = (total_score ≥ 0.5)`
+**Classification rule:** `is_staff = (total_score >= 0.5)`
 
 **Why heuristic over ML:**
 - No labeled staff/customer dataset exists for this specific store.
@@ -253,33 +253,33 @@ Each tracked person accumulates a staff score across three independent signals:
 
 ---
 
-### 7. Entry / Exit Detection — Virtual Tripwire
+### 7. Entry / Exit Detection -- Virtual Tripwire
 
 **Algorithm:** Directional line-crossing detection on the entry camera (CAM 3).
 
 **How it works:**
-1. A virtual vertical line is defined at `x = 0.45` (normalised) of CAM 3's frame — aligned with the glass door threshold.
+1. A virtual vertical line is defined at `x = 0.45` (normalised) of CAM 3's frame -- aligned with the glass door threshold.
 2. For each tracked person, the system compares `prev_x` and `curr_x` across consecutive frames.
-3. **Right → Left** crossing (outside → inside): Emit `ENTRY` event.
-4. **Left → Right** crossing (inside → outside): Emit `EXIT` event.
+3. **Right -> Left** crossing (outside -> inside): Emit `ENTRY` event.
+4. **Left -> Right** crossing (inside -> outside): Emit `EXIT` event.
 
 ```
 CAM 3 Frame:
-  ←── INSIDE STORE ──┃── OUTSIDE ──→
-                      ┃ (x = 0.45)
-                      ┃
-  Person moves R→L:   ┃  = ENTRY
-  Person moves L→R:   ┃  = EXIT
+  <-- INSIDE STORE --|-- OUTSIDE -->
+                     | (x = 0.45)
+                     |
+  Person moves R->L: |  = ENTRY
+  Person moves L->R: |  = EXIT
 ```
 
 **Why virtual tripwire:**
 - Simple, deterministic, and zero-latency.
-- No ML model required — just a coordinate comparison.
+- No ML model required -- just a coordinate comparison.
 - Perfectly suited for a single-door retail store with a fixed camera angle.
 
 ---
 
-### 8. Cross-Camera Deduplication — Temporal Window Merge
+### 8. Cross-Camera Deduplication -- Temporal Window Merge
 
 **Algorithm:** Temporal proximity matching across camera feeds.
 
@@ -293,25 +293,25 @@ CAM 3 Frame:
 | Alternative | Why Rejected |
 |---|---|
 | **3D homography projection** | Requires calibrated camera intrinsics/extrinsics and a global coordinate system. Extremely complex for 5 heterogeneous cameras. |
-| **Temporal window** [DONE] | In a single-floor, ~1000 sq ft retail store, a person takes <15 seconds to walk between any two camera zones. The 15-second window is empirically tight enough to avoid false merges while catching real transitions. |
+| **Temporal window** | In a single-floor, ~1000 sq ft retail store, a person takes <15 seconds to walk between any two camera zones. The 15-second window is empirically tight enough to avoid false merges while catching real transitions. |
 
 ---
 
-### 9. Conversion Funnel — Session-Based Stage Correlation
+### 9. Conversion Funnel -- Session-Based Stage Correlation
 
 **Algorithm:** Four-stage session funnel with POS temporal correlation.
 
 **How it works:**
 ```
-Stage 1: ENTRY          — Unique visitors who triggered an ENTRY event on CAM 3
-    ↓ (drop-off %)
-Stage 2: ZONE VISIT     — Visitors who entered at least one product zone
+Stage 1: ENTRY          -- Unique visitors who triggered an ENTRY event on CAM 3
+    | (drop-off %)
+Stage 2: ZONE VISIT     -- Visitors who entered at least one product zone
                            (SKINCARE, MAKEUP, FRAGRANCE, ACCESSORIES, etc.)
-    ↓ (drop-off %)
-Stage 3: BILLING QUEUE  — Visitors detected in the BILLING zone or who
+    | (drop-off %)
+Stage 3: BILLING QUEUE  -- Visitors detected in the BILLING zone or who
                            triggered BILLING_QUEUE_JOIN
-    ↓ (drop-off %)
-Stage 4: PURCHASE       — Visitors in BILLING zone within a 5-minute window
+    | (drop-off %)
+Stage 4: PURCHASE       -- Visitors in BILLING zone within a 5-minute window
                            before a POS transaction timestamp
 ```
 
@@ -326,14 +326,14 @@ Stage 4: PURCHASE       — Visitors in BILLING zone within a 5-minute window
 
 ---
 
-### 10. Heatmap Scoring — Weighted Normalisation
+### 10. Heatmap Scoring -- Weighted Normalisation
 
 **Algorithm:** Composite zone scoring with visit frequency and dwell time.
 
 **Formula:**
 ```
-normalised_score = 0.7 × (visit_count / max_visits × 100)
-                 + 0.3 × (avg_dwell_ms / max_dwell_ms × 100)
+normalised_score = 0.7 x (visit_count / max_visits x 100)
+                 + 0.3 x (avg_dwell_ms / max_dwell_ms x 100)
 ```
 
 **Why 70/30 weighting:**
@@ -343,16 +343,16 @@ normalised_score = 0.7 × (visit_count / max_visits × 100)
 
 ---
 
-### 11. Anomaly Detection — Rule-Based Sliding Window
+### 11. Anomaly Detection -- Rule-Based Sliding Window
 
 **Algorithm:** Threshold-based anomaly triggers with severity classification.
 
 | Anomaly Type | Detection Rule | Severity |
 |---|---|---|
-| **BILLING_QUEUE_SPIKE** | Current queue depth > 2× average AND depth ≥ 3 | WARN (2×), CRITICAL (3×) |
-| **CONVERSION_DROP** | Conversion rate < 10% with ≥ 10 visitors | WARN (>5%), CRITICAL (≤5%) |
-| **DEAD_ZONE** | No ZONE_ENTER or ZONE_DWELL events for > 30 min | INFO (<60 min), WARN (≥60 min) |
-| **HIGH_ABANDONMENT** | Queue abandonment rate > 30% with ≥ 3 joins | WARN (<50%), CRITICAL (≥50%) |
+| **BILLING_QUEUE_SPIKE** | Current queue depth > 2x average AND depth >= 3 | WARN (2x), CRITICAL (3x) |
+| **CONVERSION_DROP** | Conversion rate < 10% with >= 10 visitors | WARN (>5%), CRITICAL (<=5%) |
+| **DEAD_ZONE** | No ZONE_ENTER or ZONE_DWELL events for > 30 min | INFO (<60 min), WARN (>=60 min) |
+| **HIGH_ABANDONMENT** | Queue abandonment rate > 30% with >= 3 joins | WARN (<50%), CRITICAL (>=50%) |
 
 Each anomaly includes a human-readable `suggested_action` for store managers (e.g., "Open additional billing counter").
 
@@ -367,62 +367,62 @@ Each anomaly includes a human-readable `suggested_action` for store managers (e.
 
 ```
 CCTV .mp4 files
-      │
-      ▼
-┌─────────────────┐     Every 3rd frame
-│  YOLOv8n Detect │────────────────────▶ Bounding boxes + confidence
-│  (class=person) │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│   ByteTrack     │────────────────────▶ Persistent track IDs
-│   (IoU + low-   │
-│    conf rescue) │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Floor Filter   │──── Reflection? ──▶ DISCARD
-│  (PiP check)    │──── Valid floor ──▶ continue
-└────────┬────────┘
-         │
-    ┌────┴─────┐
-    ▼          ▼
-┌────────┐ ┌──────────┐
-│Entry/  │ │Zone      │
-│Exit    │ │Classify  │──▶ ZONE_ENTER / ZONE_EXIT / ZONE_DWELL
-│Tripwire│ │(PiP)     │
-└───┬────┘ └──────────┘
-    │
-    ▼
+      |
+      v
++-----------------+     Every 3rd frame
+|  YOLOv8n Detect |-------------------------> Bounding boxes + confidence
+|  (class=person) |
++--------+--------+
+         |
+         v
++-----------------+
+|   ByteTrack     |-------------------------> Persistent track IDs
+|   (IoU + low-   |
+|    conf rescue) |
++--------+--------+
+         |
+         v
++-----------------+
+|  Floor Filter   |---- Reflection? --------> DISCARD
+|  (PiP check)    |---- Valid floor --------> continue
++--------+--------+
+         |
+    +----+-----+
+    v          v
++--------+ +----------+
+|Entry/  | |Zone      |
+|Exit    | |Classify  |--> ZONE_ENTER / ZONE_EXIT / ZONE_DWELL
+|Tripwire| |(PiP)     |
++---+----+ +----------+
+    |
+    v
 ENTRY / EXIT / REENTRY events
-    │
-    ▼
-┌─────────────────┐
-│  Staff Detector │──▶ is_staff flag on each event
-│  (heuristic)    │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐
-│  Event Emitter  │──▶ events.jsonl (+ live POST to API)
-│  (JSONL + HTTP) │
-└────────┬────────┘
-         │
-         ▼   POST /events/ingest (batch ≤500, idempotent by event_id)
-┌──────────────────┐
-│  FastAPI API     │
-│  + aiosqlite DB  │──▶ Metrics, Funnel, Heatmap, Anomalies
-│  + POS CSV data  │──▶ WebSocket broadcast to Dashboard
-└──────────────────┘
+    |
+    v
++-----------------+
+|  Staff Detector |--> is_staff flag on each event
+|  (heuristic)    |
++--------+--------+
+         |
+         v
++-----------------+
+|  Event Emitter  |--> events.jsonl (+ live POST to API)
+|  (JSONL + HTTP) |
++--------+--------+
+         |
+         v   POST /events/ingest (batch <=500, idempotent by event_id)
++-----------------+
+|  FastAPI API     |
+|  + aiosqlite DB  |--> Metrics, Funnel, Heatmap, Anomalies
+|  + POS CSV data  |--> WebSocket broadcast to Dashboard
++-----------------+
 ```
 
 ---
 
 ## Event Schema Design
 
-We chose a **Sparse Semantic Schema** — only meaningful state transitions are emitted:
+We chose a **Sparse Semantic Schema** -- only meaningful state transitions are emitted:
 
 ```json
 {
@@ -444,10 +444,10 @@ We chose a **Sparse Semantic Schema** — only meaningful state transitions are 
 }
 ```
 
-**Valid event types:** `ENTRY` · `EXIT` · `REENTRY` · `ZONE_ENTER` · `ZONE_EXIT` · `ZONE_DWELL` · `BILLING_QUEUE_JOIN` · `BILLING_QUEUE_ABANDON`
+**Valid event types:** `ENTRY`, `EXIT`, `REENTRY`, `ZONE_ENTER`, `ZONE_EXIT`, `ZONE_DWELL`, `BILLING_QUEUE_JOIN`, `BILLING_QUEUE_ABANDON`
 
 **Why sparse over dense:**
-A dense schema (emitting x,y every second per person) would generate ~100,000+ events/hour and overwhelm SQLite. By pushing spatial reasoning to the edge pipeline, only ~500 semantic events are generated per camera clip — keeping the API fast and the database lean.
+A dense schema (emitting x,y every second per person) would generate ~100,000+ events/hour and overwhelm SQLite. By pushing spatial reasoning to the edge pipeline, only ~500 semantic events are generated per camera clip -- keeping the API fast and the database lean.
 
 ---
 
@@ -458,7 +458,7 @@ A dense schema (emitting x,y every second per person) would generate ~100,000+ e
 | `POST` | `/events/ingest` | Batch-ingest up to 500 events (idempotent by `event_id`) |
 | `GET` | `/stores/{store_id}/metrics` | Real-time KPIs: visitors, conversion rate, revenue, queue depth |
 | `GET` | `/stores/{store_id}/funnel` | 4-stage conversion funnel with drop-off percentages |
-| `GET` | `/stores/{store_id}/heatmap` | Zone visit frequency + dwell, normalised 0–100 |
+| `GET` | `/stores/{store_id}/heatmap` | Zone visit frequency + dwell, normalised 0-100 |
 | `GET` | `/stores/{store_id}/anomalies` | Active anomalies with severity + suggested actions |
 | `GET` | `/health` | System health, per-store feed status, event lag detection |
 | `WS` | `/ws/live` | WebSocket for real-time dashboard metric broadcasts |
@@ -484,53 +484,53 @@ A dense schema (emitting x,y every second per person) would generate ~100,000+ e
 
 ```
 store-intelligence/
-├── app/                        # FastAPI application
-│   ├── main.py                 # App entry point, lifespan, WebSocket, middleware
-│   ├── models.py               # Pydantic schemas (StoreEvent, StoreMetrics, etc.)
-│   ├── database.py             # aiosqlite layer, schema init, POS data loading
-│   ├── ingestion.py            # POST /events/ingest — batch, idempotent, dedup
-│   ├── metrics.py              # GET /metrics — real-time KPIs with POS correlation
-│   ├── funnel.py               # GET /funnel — 4-stage conversion funnel
-│   ├── heatmap.py              # GET /heatmap — normalised zone scoring
-│   ├── anomalies.py            # GET /anomalies — rule-based detection
-│   ├── health.py               # GET /health — system + feed status
-│   └── seed.py                 # Auto-seed sample data for fresh deployments
-│
-├── pipeline/                   # Video analytics pipeline (runs on host)
-│   ├── detect.py               # Main pipeline: YOLO → ByteTrack → Zone → Emit
-│   ├── zone_classifier.py      # Ray-casting PiP with per-camera polygon maps
-│   ├── staff_detector.py       # Multi-signal heuristic staff classifier
-│   ├── emit.py                 # JSONL event emitter with live HTTP streaming
-│   ├── ingest_events.py        # Batch POST events.jsonl → API
-│   ├── run.sh                  # One-shot pipeline runner
-│   └── custom_tracker.yaml     # ByteTrack tuning (extended buffer, strict match)
-│
-├── dashboard/                  # Frontend
-│   ├── index.html              # Main HTML structure
-│   ├── app.js                  # WebSocket client, Chart.js integration
-│   └── styles.css              # Glassmorphism design system
-│
-├── data/                       # Runtime data (gitignored)
-│   ├── pos_transactions.csv    # POS transaction data
-│   └── store_intelligence.db   # SQLite database (auto-created)
-│
-├── tests/                      # Test suite
-│   ├── conftest.py             # Shared fixtures, mock DB, sample events
-│   ├── test_ingestion.py       # Ingestion endpoint tests
-│   ├── test_metrics.py         # Metrics calculation tests
-│   ├── test_anomalies.py       # Anomaly detection tests
-│   └── test_pipeline.py        # Pipeline unit tests
-│
-├── docs/                       # Additional documentation
-│   ├── DESIGN.md               # Architecture deep-dive
-│   └── CHOICES.md              # Technical trade-off decisions
-│
-├── Dockerfile                  # API container (Python 3.12-slim)
-├── docker-compose.yml          # Single-command deployment
-├── requirements.txt            # API dependencies
-├── requirements-pipeline.txt   # CV pipeline dependencies
-├── requirements-test.txt       # Test dependencies
-└── .gitignore                  # Excludes videos, models, DBs, caches
+|-- app/                        # FastAPI application
+|   |-- main.py                 # App entry point, lifespan, WebSocket, middleware
+|   |-- models.py               # Pydantic schemas (StoreEvent, StoreMetrics, etc.)
+|   |-- database.py             # aiosqlite layer, schema init, POS data loading
+|   |-- ingestion.py            # POST /events/ingest -- batch, idempotent, dedup
+|   |-- metrics.py              # GET /metrics -- real-time KPIs with POS correlation
+|   |-- funnel.py               # GET /funnel -- 4-stage conversion funnel
+|   |-- heatmap.py              # GET /heatmap -- normalised zone scoring
+|   |-- anomalies.py            # GET /anomalies -- rule-based detection
+|   |-- health.py               # GET /health -- system + feed status
+|   +-- seed.py                 # Auto-seed sample data for fresh deployments
+|
+|-- pipeline/                   # Video analytics pipeline (runs on host)
+|   |-- detect.py               # Main pipeline: YOLO -> ByteTrack -> Zone -> Emit
+|   |-- zone_classifier.py      # Ray-casting PiP with per-camera polygon maps
+|   |-- staff_detector.py       # Multi-signal heuristic staff classifier
+|   |-- emit.py                 # JSONL event emitter with live HTTP streaming
+|   |-- ingest_events.py        # Batch POST events.jsonl -> API
+|   |-- run.sh                  # One-shot pipeline runner
+|   +-- custom_tracker.yaml     # ByteTrack tuning (extended buffer, strict match)
+|
+|-- dashboard/                  # Frontend
+|   |-- index.html              # Main HTML structure
+|   |-- app.js                  # WebSocket client, Chart.js integration
+|   +-- styles.css              # Glassmorphism design system
+|
+|-- data/                       # Runtime data (gitignored)
+|   |-- pos_transactions.csv    # POS transaction data
+|   +-- store_intelligence.db   # SQLite database (auto-created)
+|
+|-- tests/                      # Test suite
+|   |-- conftest.py             # Shared fixtures, mock DB, sample events
+|   |-- test_ingestion.py       # Ingestion endpoint tests
+|   |-- test_metrics.py         # Metrics calculation tests
+|   |-- test_anomalies.py       # Anomaly detection tests
+|   +-- test_pipeline.py        # Pipeline unit tests
+|
+|-- docs/                       # Additional documentation
+|   |-- DESIGN.md               # Architecture deep-dive
+|   +-- CHOICES.md              # Technical trade-off decisions
+|
+|-- Dockerfile                  # API container (Python 3.12-slim)
+|-- docker-compose.yml          # Single-command deployment
+|-- requirements.txt            # API dependencies
+|-- requirements-pipeline.txt   # CV pipeline dependencies
+|-- requirements-test.txt       # Test dependencies
++-- .gitignore                  # Excludes videos, models, DBs, caches
 ```
 
 ---
@@ -560,10 +560,10 @@ python pipeline/detect.py --video_dir "../CCTV Footage"
 python pipeline/ingest_events.py
 
 # 5. Open Dashboard
-# → http://localhost:8080
+# -> http://localhost:8080
 
 # 6. API Docs
-# → http://localhost:8000/docs
+# -> http://localhost:8000/docs
 ```
 
 ### Option 2: Fully Local (Without Docker)
@@ -601,4 +601,4 @@ pytest tests/ -v
 
 ## License
 
-Built for the Purplle Tech Challenge 2026 — Round 2.
+Built for the Purplle Tech Challenge 2026 -- Round 2.
